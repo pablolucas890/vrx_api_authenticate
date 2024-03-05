@@ -45,6 +45,13 @@
 - Format code with Prettier: `npm run format`
 - Check sintax and style on projet: `npm run lint`
 - Fix sintax and style on projet with eslit: `npm run lint:fix`⏎
+- Create config file in `data/cfg.json` with:
+    ```json
+    {
+        "username": "username",
+        "password": "password"
+    }
+    ```
 
 ---
 ## Production
@@ -53,3 +60,9 @@
   - `docker build -t registry.example.com/group/project/image .`
 - Push Docker
   - `docker push registry.example.com/group/project/image`
+- Create config file in `data/cfg.json` with:
+    ```json
+    {
+        "username": "username",
+        "password": "password"
+    }

@@ -3,8 +3,10 @@ import crypto from 'crypto';
 import Fastify from 'fastify';
 import * as fs from 'fs';
 import sqlite3 from 'sqlite3';
-import { DB3, HOST, PORT } from './global/consts';
+import { CFG_FILE, DB3, HOST, PORT } from './global/consts';
 import { Users } from './global/props';
+
+const cfg = JSON.parse(fs.readFileSync(CFG_FILE, 'utf8'));
 
 async function createDb3() {
   const db = new sqlite3.Database(DB3);
@@ -33,8 +35,30 @@ async function bootstrap() {
 
   await app.register(cors, { origin: true });
 
-  app.post('/auth', async (request, reply) => {
+  if (cfg.username && cfg.password) {
+    app.addHook('preHandler', async (request, reply) => {
+      if (!(request.url === '/' && request.method === 'GET')) return;
 
+      const auth = request.headers.authorization || '';
+      const [scheme, credentials] = auth.split(' ');
+      if (scheme && scheme.toLowerCase() === 'basic') {
+        const [login, password] = Buffer.from(credentials, 'base64').toString().split(':');
+        if (!login || !password || login !== cfg.username || password !== cfg.password) {
+          reply.header('WWW-Authenticate', 'Basic realm="401"');
+          reply.code(401).send('Autenticação requerida.');
+        }
+      } else {
+        reply.header('WWW-Authenticate', 'Basic realm="401"');
+        reply.code(401).send('Autenticação requerida.');
+      }
+    });
+  }
+
+  app.get('/', async (request, reply) => {
+    return reply.type('text/html').send('<h1>Hello World</h1>');
+  });
+
+  app.post('/auth', async (request, reply) => {
     const { email, password } = request.body as { email: string; password: string };
     const db = new sqlite3.Database(DB3);
     const users = await getUsers(db);
