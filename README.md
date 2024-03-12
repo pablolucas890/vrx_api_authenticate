@@ -1,3 +1,4 @@
+TODO: Melhorar o Readme e usar apenas um
 # vrx_api_authenticate
 
 ## Enviroment
@@ -33,36 +34,46 @@
     },
     ```
 
----
-## Development
-
-- Node Version: `v18.16.0`
+## Client
+- Node Version: `v16.20.0`
   - Install `nvm` on machine to controll the node versions
-  - `nvm install 18.16.0`
-  - `nvm use 18.16.0`
+  - `nvm install 16.20.0`
+  - `nvm use 16.20.0`
+- Install packages:   `npm install --legacy-peer-deps`
+- Start server: `npm run start`
+- Build: `npm run build`
+- Format code with Prettier: `npm run format`
+- Check sintax and style on projet: `npm run lint`
+- Fix sintax and style on projet with eslit: `npm run lint:fix`
+- Create `auth.ts` file at `src/global` with:
+    ```js
+    export const USERNAME = 'admin';
+    export const PASSWORD = 'admin';
+    ```
+
+## Server
+- Node Version: `v16.20.0`
+  - Install `nvm` on machine to controll the node versions
+  - `nvm install 16.20.0`
+  - `nvm use 16.20.0`
 - Install packages:   `npm install`
 - Start server: `npm run start` || start server with auto reload: `npm run dev`
 - Format code with Prettier: `npm run format`
 - Check sintax and style on projet: `npm run lint`
-- Fix sintax and style on projet with eslit: `npm run lint:fix`⏎
-- Create config file in `data/cfg.json` with:
-    ```json
-    {
-        "username": "username",
-        "password": "password"
-    }
+- Fix sintax and style on projet with eslit: `npm run lint:fix`
+- Create `auth.ts` file at `src/global` with:
+    ```js
+    export const USERNAME = 'admin';
+    export const PASSWORD = 'admin';
     ```
-
----
 ## Production
 
 - Build docker
   - `docker build -t registry.example.com/group/project/image .`
 - Push Docker
   - `docker push registry.example.com/group/project/image`
-- Create config file in `data/cfg.json` with:
-    ```json
-    {
-        "username": "username",
-        "password": "password"
-    }
+- Create `auth.ts` file at `src/global` with:
+    ```js
+    export const USERNAME = 'admin';
+    export const PASSWORD = 'admin';
+    ```

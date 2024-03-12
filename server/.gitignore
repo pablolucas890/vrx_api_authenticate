@@ -1,3 +1,3 @@
 node_modules/
 data/db.db3
-data/cfg.json
+*/global/auth.ts

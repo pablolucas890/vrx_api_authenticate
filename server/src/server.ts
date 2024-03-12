@@ -4,10 +4,9 @@ import crypto from 'crypto';
 import Fastify from 'fastify';
 import * as fs from 'fs';
 import sqlite3 from 'sqlite3';
-import { CFG_FILE, DB3, HOST, PORT } from './global/consts';
+import { PASSWORD, USERNAME } from './global/auth';
 import { Users } from './global/props';
-
-const cfg = JSON.parse(fs.readFileSync(CFG_FILE, 'utf8'));
+import { DB3, SERVER_HOST, SERVER_PORT } from './global/utils';
 
 async function createDb3() {
   const db = new sqlite3.Database(DB3);
@@ -67,7 +66,8 @@ async function bootstrap() {
 
   await app.register(formbody);
 
-  if (cfg.username && cfg.password) {
+  // TODO: N subir o username e senha pro git
+  if (USERNAME && PASSWORD) {
     app.addHook('preHandler', async (request, reply) => {
       if (request.url === '/auth' && request.method === 'POST') return;
 
@@ -75,7 +75,7 @@ async function bootstrap() {
       const [scheme, credentials] = auth.split(' ');
       if (scheme && scheme.toLowerCase() === 'basic') {
         const [login, password] = Buffer.from(credentials, 'base64').toString().split(':');
-        if (!login || !password || login !== cfg.username || password !== cfg.password) {
+        if (!login || !password || login !== USERNAME || password !== PASSWORD) {
           reply.header('WWW-Authenticate', 'Basic realm="401"');
           reply.code(401).send('Autenticação requerida.');
         }
@@ -85,27 +85,6 @@ async function bootstrap() {
       }
     });
   }
-
-  // HTTP routes
-  app.get('/', async (request, reply) => {
-    const htmlContent = fs.readFileSync('public/index.html', 'utf8');
-    return reply.type('text/html').send(htmlContent);
-  });
-
-  app.get('/register', async (request, reply) => {
-    const htmlContent = fs.readFileSync('public/register.html', 'utf8');
-    return reply.type('text/html').send(htmlContent);
-  });
-
-  app.get('/success', async (request, reply) => {
-    const htmlContent = fs.readFileSync('public/success.html', 'utf8');
-    return reply.type('text/html').send(htmlContent);
-  });
-
-  app.get('/users', async (request, reply) => {
-    const htmlContent = fs.readFileSync('public/users.html', 'utf8');
-    return reply.type('text/html').send(htmlContent);
-  });
 
   // API routes
   app.post('/register', async (request, reply) => {
@@ -118,25 +97,34 @@ async function bootstrap() {
       const db = new sqlite3.Database(DB3);
       insertUser(db, email, hash, salt);
       db.close();
-      return reply.redirect('/success');
+      return reply.status(201).send({ message: 'User created' });
     } catch (error) {
       return reply.status(500).send({ message: 'Internal server error' });
     }
   });
 
   app.post('/users', async (request, reply) => {
-    const db = new sqlite3.Database(DB3);
-    const users = await getUsers(db);
-    db.close();
-    return reply.status(200).send(users);
+    try {
+      const db = new sqlite3.Database(DB3);
+      const users = await getUsers(db);
+      db.close();
+      return reply.status(200).send(users);
+    } catch (error) {
+      return reply.status(500).send({ message: 'Internal server error' });
+    }
   });
 
-  app.get('/delete/:id', async (request, reply) => {
-    const { id } = request.params as { id: number };
-    const db = new sqlite3.Database(DB3);
-    deleteUser(db, id);
-    db.close();
-    return reply.redirect('/users');
+  app.delete('/user/:id', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: number };
+      const db = new sqlite3.Database(DB3);
+      deleteUser(db, id);
+      const users = await getUsers(db);
+      db.close();
+      return reply.status(200).send(users);
+    }catch (error) {
+      return reply.status(500).send({ message: 'Internal server error' });
+    }
   });
 
   // Sketchup Authenticaion
@@ -159,9 +147,9 @@ async function bootstrap() {
     return reply.status(200).send({ message: 'Authenticated' });
   });
 
-  app.listen({ port: PORT, host: HOST }, err => {
+  app.listen({ port: SERVER_PORT, host: SERVER_HOST }, err => {
     if (err) throw err;
-    console.log(`Server listening on http://${HOST}:${PORT}`);
+    console.log(`Server listening on http://${SERVER_HOST}:${SERVER_PORT}`);
   });
 }
 
