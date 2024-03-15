@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { SERVER_HOST, SERVER_PORT } from './global/utils';
+import { SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from './global/utils';
 import Authenticated from './routes/Authenticated';
 import NotAuthenticated from './routes/NotAuthenticated';
 
@@ -10,10 +10,10 @@ function App() {
   const PASSWORD = localStorage.getItem('password');
 
   React.useEffect(() => {
-    fetch(`http://${SERVER_HOST}:${SERVER_PORT}/users`, {
+    fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/users`, {
       method: 'POST',
       headers: { Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD) },
-    }).then(response => setAuthentecated(response.status === 401));
+    }).then(response => setAuthentecated(response.status !== 401));
   }, []);
 
   return <BrowserRouter>{authentecated ? <Authenticated /> : <NotAuthenticated />}</BrowserRouter>;

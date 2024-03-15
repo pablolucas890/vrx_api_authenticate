@@ -1,5 +1,5 @@
 import React from 'react';
-import { SERVER_HOST, SERVER_PORT } from '../global/utils';
+import { SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from '../global/utils';
 
 export function Register() {
   const [name, setName] = React.useState('');
@@ -9,7 +9,7 @@ export function Register() {
   const PASSWORD = localStorage.getItem('password');
 
   async function handleSubmit() {
-    await fetch(`http://${SERVER_HOST}:${SERVER_PORT}/register`, {
+    await fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

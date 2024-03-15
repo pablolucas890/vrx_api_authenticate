@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken';
 import sqlite3 from 'sqlite3';
 import { JWT_SECRET, PASSWORD, USERNAME } from './global/auth';
 import { Users } from './global/props';
-import { DAYS_TO_EXPIRE, DB3, SERVER_HOST, SERVER_PORT } from './global/utils';
+import { DAYS_TO_EXPIRE, DB3, SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from './global/utils';
 
 async function createDb3() {
   const db = new sqlite3.Database(DB3);
@@ -163,7 +163,7 @@ async function bootstrap() {
 
   app.listen({ port: SERVER_PORT, host: SERVER_HOST }, err => {
     if (err) throw err;
-    console.log(`Server listening on http://${SERVER_HOST}:${SERVER_PORT}`);
+    console.log(`Server listening on ${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}`);
   });
 }
 

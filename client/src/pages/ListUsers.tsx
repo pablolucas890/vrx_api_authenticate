@@ -1,6 +1,6 @@
 import React from 'react';
 import { Users } from '../global/props';
-import { SERVER_HOST, SERVER_PORT } from '../global/utils';
+import { SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from '../global/utils';
 
 function ListUsers() {
   const [users, setUsers] = React.useState<Users[]>([]);
@@ -8,7 +8,7 @@ function ListUsers() {
   const PASSWORD = localStorage.getItem('password');
 
   React.useEffect(() => {
-    fetch(`http://${SERVER_HOST}:${SERVER_PORT}/users`, {
+    fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/users`, {
       method: 'POST',
       headers: {
         Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD),
@@ -21,7 +21,7 @@ function ListUsers() {
   }, []);
 
   function handleDelete(id?: number) {
-    fetch(`http://${SERVER_HOST}:${SERVER_PORT}/user/${id}`, {
+    fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/user/${id}`, {
       method: 'DELETE',
       headers: {
         Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD),
