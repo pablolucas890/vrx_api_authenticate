@@ -1,4 +1,3 @@
-TODO: Melhorar o Readme e usar apenas um
 # vrx_api_authenticate
 
 ## Enviroment
@@ -49,6 +48,7 @@ TODO: Melhorar o Readme e usar apenas um
     ```js
     export const USERNAME = 'admin';
     export const PASSWORD = 'admin';
+    export const JWT_SECRET = 'secret';
     ```
 
 ## Server
@@ -65,6 +65,7 @@ TODO: Melhorar o Readme e usar apenas um
     ```js
     export const USERNAME = 'admin';
     export const PASSWORD = 'admin';
+    export const JWT_SECRET = 'secret';
     ```
 ## Production
 

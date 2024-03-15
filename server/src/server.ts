@@ -3,10 +3,11 @@ import formbody from '@fastify/formbody';
 import crypto from 'crypto';
 import Fastify from 'fastify';
 import * as fs from 'fs';
+import jwt from 'jsonwebtoken';
 import sqlite3 from 'sqlite3';
-import { PASSWORD, USERNAME } from './global/auth';
+import { JWT_SECRET, PASSWORD, USERNAME } from './global/auth';
 import { Users } from './global/props';
-import { DB3, SERVER_HOST, SERVER_PORT } from './global/utils';
+import { DAYS_TO_EXPIRE, DB3, SERVER_HOST, SERVER_PORT } from './global/utils';
 
 async function createDb3() {
   const db = new sqlite3.Database(DB3);
@@ -70,6 +71,7 @@ async function bootstrap() {
   if (USERNAME && PASSWORD) {
     app.addHook('preHandler', async (request, reply) => {
       if (request.url === '/auth' && request.method === 'POST') return;
+      else if (request.url === '/verify' && request.method === 'POST') return;
 
       const auth = request.headers.authorization || '';
       const [scheme, credentials] = auth.split(' ');
@@ -122,7 +124,7 @@ async function bootstrap() {
       const users = await getUsers(db);
       db.close();
       return reply.status(200).send(users);
-    }catch (error) {
+    } catch (error) {
       return reply.status(500).send({ message: 'Internal server error' });
     }
   });
@@ -143,8 +145,20 @@ async function bootstrap() {
     if (hash !== user.password) {
       return reply.status(401).send({ message: 'Invalid password' });
     }
+    const token = jwt.sign({ email: user.email }, JWT_SECRET, {
+      expiresIn: DAYS_TO_EXPIRE * 24 * 60 * 60,
+    });
+    return reply.status(200).send({ message: 'Authenticated', token: token });
+  });
 
-    return reply.status(200).send({ message: 'Authenticated' });
+  app.post('/verify', async (request, reply) => {
+    const { token } = request.body as { token: string };
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      return reply.status(200).send({ message: 'Valid token', decoded });
+    } catch (error) {
+      return reply.status(401).send({ message: 'Invalid token' });
+    }
   });
 
   app.listen({ port: SERVER_PORT, host: SERVER_HOST }, err => {
