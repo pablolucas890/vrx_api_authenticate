@@ -17,6 +17,12 @@ function ListUsers() {
       .then(response => response.json())
       .then(data => {
         setUsers(data);
+      })
+      .catch(() => {
+        alert('Erro ao conectar com o servidor');
+        localStorage.removeItem('username');
+        localStorage.removeItem('password');
+        window.location.href = '/';
       });
   }, []);
 
@@ -30,6 +36,12 @@ function ListUsers() {
       .then(response => response.json())
       .then(data => {
         setUsers(data);
+      })
+      .catch(() => {
+        alert('Erro ao conectar com o servidor');
+        localStorage.removeItem('username');
+        localStorage.removeItem('password');
+        window.location.href = '/';
       });
   }
 

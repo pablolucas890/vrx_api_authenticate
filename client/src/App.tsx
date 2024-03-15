@@ -13,7 +13,12 @@ function App() {
     fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/users`, {
       method: 'POST',
       headers: { Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD) },
-    }).then(response => setAuthentecated(response.status !== 401));
+    })
+      .then(response => setAuthentecated(response.status !== 401))
+      .catch(() => {
+        alert('Erro ao conectar com o servidor');
+        setAuthentecated(false);
+      });
   }, []);
 
   return <BrowserRouter>{authentecated ? <Authenticated /> : <NotAuthenticated />}</BrowserRouter>;

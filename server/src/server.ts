@@ -31,14 +31,25 @@ async function getUsers(db: sqlite3.Database): Promise<[Users]> {
   });
 }
 
-async function insertUser(db: sqlite3.Database, name: string, email: string, phone: string, password: string, salt: string): Promise<void> {
+async function insertUser(
+  db: sqlite3.Database,
+  name: string,
+  email: string,
+  phone: string,
+  password: string,
+  salt: string,
+): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    db.run('INSERT INTO users (name, email, phone, password, salt) VALUES (?, ?, ?, ?, ?)', [name, email, phone, password, salt], err => {
-      if (err) reject(err);
-      else {
-        resolve();
-      }
-    });
+    db.run(
+      'INSERT INTO users (name, email, phone, password, salt) VALUES (?, ?, ?, ?, ?)',
+      [name, email, phone, password, salt],
+      err => {
+        if (err) reject(err);
+        else {
+          resolve();
+        }
+      },
+    );
   });
 }
 

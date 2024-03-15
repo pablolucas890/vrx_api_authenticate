@@ -62,7 +62,12 @@ export function Home() {
       headers: { Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD) },
     })
       .then(response => response.json())
-      .then(data => setUsers(data));
+      .then(data => setUsers(data))
+      .catch(() => {
+        localStorage.removeItem('username');
+        localStorage.removeItem('password');
+        window.location.href = '/';
+      });
   }
 
   return (
@@ -73,7 +78,7 @@ export function Home() {
           <Title title='Olá, selecione o que gostaria de fazer' className='pb-6' />
           <SubTitle title='Clique no card para acessá-lo' className='pb-6' />
           <Card url='/register' title='+ Novo cadastro' />
-          {users && (
+          {users.length > 0 && (
             <div>
               <div className='flex justify-between items-center'>
                 <Title title='Usuários cadastrados' className='pt-6 pb-6' />

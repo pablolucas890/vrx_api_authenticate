@@ -21,6 +21,12 @@ export function Register() {
       .then(response => response.json())
       .then(data => {
         alert(data.message);
+      })
+      .catch(() => {
+        alert('Erro ao conectar com o servidor');
+        localStorage.removeItem('username');
+        localStorage.removeItem('password');
+        window.location.href = '/';
       });
   }
 
