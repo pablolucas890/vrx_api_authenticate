@@ -4,6 +4,7 @@ import { SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from '../global/utils';
 export function Register() {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
+  const [phone, setPhone] = React.useState('');
   const [password, setPassword] = React.useState('');
   const USERNAME = localStorage.getItem('username');
   const PASSWORD = localStorage.getItem('password');
@@ -15,7 +16,7 @@ export function Register() {
         'Content-Type': 'application/json',
         Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD),
       },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, phone, password }),
     })
       .then(response => response.json())
       .then(data => {
@@ -33,6 +34,8 @@ export function Register() {
         <label htmlFor='email'>Email</label>
         <input type='email' name='email' id='email' value={email} onChange={e => setEmail(e.target.value)} />
         <br />
+        <label htmlFor='phone'>Telefone</label>
+        <input type='phone' name='phone' id='phone' value={phone} onChange={e => setPhone(e.target.value)} />
         <label htmlFor='password'>Senha</label>
         <input
           type='password'

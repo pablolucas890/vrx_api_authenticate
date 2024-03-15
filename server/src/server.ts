@@ -15,7 +15,7 @@ async function createDb3() {
     fs.writeFileSync(DB3, '');
   }
   db.run(
-    'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, password TEXT, salt TEXT)',
+    'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT, phone TEXT, password TEXT, salt TEXT)',
   );
   db.close();
 }
@@ -31,9 +31,9 @@ async function getUsers(db: sqlite3.Database): Promise<[Users]> {
   });
 }
 
-async function insertUser(db: sqlite3.Database, email: string, password: string, salt: string): Promise<void> {
+async function insertUser(db: sqlite3.Database, name: string, email: string, phone: string, password: string, salt: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    db.run('INSERT INTO users (email, password, salt) VALUES (?, ?, ?)', [email, password, salt], err => {
+    db.run('INSERT INTO users (name, email, phone, password, salt) VALUES (?, ?, ?, ?, ?)', [name, email, phone, password, salt], err => {
       if (err) reject(err);
       else {
         resolve();
@@ -90,14 +90,14 @@ async function bootstrap() {
 
   // API routes
   app.post('/register', async (request, reply) => {
-    const { email, password } = request.body as { email: string; password: string };
+    const { email, password, name, phone } = request.body as Users;
     if (!email || !password) {
       return reply.status(400).send({ message: 'Email and password are required' });
     }
     try {
       const { salt, hash } = hashPassword(email, password);
       const db = new sqlite3.Database(DB3);
-      insertUser(db, email, hash, salt);
+      insertUser(db, name, email, phone, hash, salt);
       db.close();
       return reply.status(201).send({ message: 'User created' });
     } catch (error) {
