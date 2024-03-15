@@ -1,11 +1,12 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
+import Home from '../pages/Home';
+import ListUsers from '../pages/ListUsers';
+import Register from '../pages/Register';
 
-import Register from '../components/Register';
-import Home from '../components/Home';
-import ListUsers from '../components/ListUsers';
+console.log(React.version);
 
-const ListRoutes = () => {
+const Authenticated = () => {
   return (
     <Routes>
       <Route path='/' element={<Home />} />
@@ -15,4 +16,4 @@ const ListRoutes = () => {
   );
 };
 
-export default ListRoutes;
+export default Authenticated;

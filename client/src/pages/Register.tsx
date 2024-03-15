@@ -1,14 +1,14 @@
 import React from 'react';
-import { PASSWORD, USERNAME } from '../global/auth';
 import { SERVER_HOST, SERVER_PORT } from '../global/utils';
 
 export function Register() {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const USERNAME = localStorage.getItem('username');
+  const PASSWORD = localStorage.getItem('password');
 
   async function handleSubmit() {
-    console.log(name, email, password);
     await fetch(`http://${SERVER_HOST}:${SERVER_PORT}/register`, {
       method: 'POST',
       headers: {
