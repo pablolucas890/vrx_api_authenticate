@@ -17,7 +17,7 @@ export default function Button({ title, hasIcon, active, ...rest }: ButtonProps)
       <button
         {...props}
         className={clsx(
-          'text-white font-poopins p-3 rounded-md border-0 w-200 flex justify-center items-center',
+          'text-white font-poopins p-3 rounded-md border-0 w-200 flex justify-center items-center hover:scale-110 hover:shadow-xl duration-300',
           active ? 'bg-primary-500' : 'bg-primary-300',
           className,
         )}

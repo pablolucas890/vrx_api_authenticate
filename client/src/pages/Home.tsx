@@ -84,7 +84,7 @@ export function Home() {
                 <Title title='Usuários cadastrados' className='pt-6 pb-6' />
                 <LuRefreshCw
                   onClick={listUsers}
-                  className='text-primary-450 text-2xl hover:text-primary-300 cursor-pointer'
+                  className='text-primary-450 text-2xl hover:scale-110 hover:shadow-xl duration-300'
                 />
               </div>
               <DataTable

@@ -13,7 +13,7 @@ export default function Card({ url, title, ...rest }: CardProps) {
       href={url}
       className={clsx(
         'bg-white rounded-2xl shadow-md p-5 w-80 h-40 flex flex-col justify-center items-center',
-        ' font-poopins text-primary-500 hover:bg-opacity-30 hover:bg-primary-500 hover:text-white hover:animate-pulse',
+        'font-poopins text-primary-500 hover:bg-opacity-30 hover:scale-110 hover:shadow-xl duration-300',
       )}
     >
       {title}
