@@ -150,7 +150,7 @@ function ListUsers() {
 
   return (
     <div className='flex'>
-      <SideBar />
+      <SideBar pageSelected='users' />
       <Content>
         <div className='w-full h-screen'>
           <Title title='Usuários cadastrados' className='mb-4' />

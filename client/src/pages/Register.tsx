@@ -90,7 +90,7 @@ export function Register() {
 
   return (
     <div className='flex'>
-      <SideBar />
+      <SideBar pageSelected='register' />
       <Content className='flex gap-4'>
         <Title title='Cadastrar usuário' />
         <SubTitle title='Preencha os campos abaixo para cadastrar um novo usuário' />

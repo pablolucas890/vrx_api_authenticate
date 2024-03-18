@@ -73,7 +73,7 @@ export function Home() {
 
   return (
     <div className='flex'>
-      <SideBar />
+      <SideBar pageSelected='home' />
       <Content>
         <div className='w-full h-screen mt-24'>
           <Title title='Olá, selecione o que gostaria de fazer' className='pb-6' />

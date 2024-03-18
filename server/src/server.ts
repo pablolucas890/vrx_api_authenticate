@@ -43,7 +43,7 @@ async function insertUser(
   return new Promise<void>((resolve, reject) => {
     if (id)
       db.run(
-        'UPDATE users SET name = ?, email = ?, phone = ?, password = ?, salt = ? WHERE id = ?',
+        'UPDATE users SET name = ?, email = ?, phone = ?, password = ?, salt = ?, forgotPassword = 0 WHERE id = ?',
         [name, email, phone, password, salt, id],
         err => {
           if (err) reject(err);
