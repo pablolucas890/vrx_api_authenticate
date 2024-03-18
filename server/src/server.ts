@@ -15,7 +15,7 @@ async function createDb3() {
     fs.writeFileSync(DB3, '');
   }
   db.run(
-    'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT, phone TEXT, password TEXT, salt TEXT)',
+    'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT UNIQUE, phone TEXT, password TEXT, salt TEXT, forgotPassword BOOLEAN DEFAULT 0)',
   );
   db.close();
 }
@@ -87,11 +87,11 @@ async function bootstrap() {
 
   await app.register(formbody);
 
-  // TODO: N subir o username e senha pro git
   if (USERNAME && PASSWORD) {
     app.addHook('preHandler', async (request, reply) => {
       if (request.url === '/auth' && request.method === 'POST') return;
       else if (request.url === '/verify' && request.method === 'POST') return;
+      else if (request.url.startsWith('/forgot') && request.method === 'GET') return;
 
       const auth = request.headers.authorization || '';
       const [scheme, credentials] = auth.split(' ');
@@ -160,6 +160,23 @@ async function bootstrap() {
       const users = await getUsers(db);
       db.close();
       return reply.status(200).send(users);
+    } catch (error) {
+      return reply.status(500).send({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/forgot/:email', async (request, reply) => {
+    try {
+      const { email } = request.params as { email: string };
+      const db = new sqlite3.Database(DB3);
+      const users = await getUsers(db);
+      const user = users.find((user: Users) => user.email === email);
+      if (!user) {
+        return reply.status(404).send({ message: 'User not found' });
+      }
+      db.run('UPDATE users SET forgotPassword = 1 WHERE email = ?', [email]);
+      db.close();
+      return reply.status(200).send({ message: 'Nosso time já foi notificado, logo entraremos em contato' });
     } catch (error) {
       return reply.status(500).send({ message: 'Internal server error' });
     }

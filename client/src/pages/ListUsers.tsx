@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import React from 'react';
 import DataTable from 'react-data-table-component';
-import { MdDelete, MdEdit, MdOutlineArrowDropDown } from 'react-icons/md';
+import { MdDelete, MdEdit, MdNotifications, MdOutlineArrowDropDown } from 'react-icons/md';
 import Content from '../components/Content';
 import Input from '../components/Input';
 import SideBar from '../components/SideBar';
@@ -44,7 +44,7 @@ function ListUsers() {
       style: cellStyle,
     },
     {
-      name: <SubTitle title='Deletar' />,
+      name: <SubTitle title='Deletar' className='w-full text-center' />,
       selector: (r: Users) => r.id!,
       sortable: false,
       grow: 1,
@@ -52,12 +52,12 @@ function ListUsers() {
       cell: (row: Users) => (
         <MdDelete
           onClick={() => handleDelete(row.id)}
-          className={clsx('cursor-pointer text-2xl text-primary-450', hoverClassName)}
+          className={clsx('cursor-pointer text-2xl text-primary-450 w-full', hoverClassName)}
         />
       ),
     },
     {
-      name: <SubTitle title='Editar' />,
+      name: <SubTitle title='Editar' className='w-full text-center' />,
       selector: (r: Users) => r.id!,
       sortable: false,
       grow: 1,
@@ -66,9 +66,26 @@ function ListUsers() {
       cell: (row: Users) => (
         <MdEdit
           onClick={() => handleEdit(row.id)}
-          className={clsx('cursor-pointer text-2xl text-primary-450', hoverClassName)}
+          className={clsx('cursor-pointer text-2xl text-primary-450 w-full', hoverClassName)}
         />
       ),
+    },
+    {
+      name: <SubTitle title='Notificações' className='w-full text-center' />,
+      selector: (r: Users) => r.id!,
+      sortable: true,
+      grow: 2,
+      reorder: true,
+      style: cellStyle,
+      cell: (row: Users) =>
+        row.forgotPassword ? (
+          <MdNotifications
+            onClick={() => alert('Usuário solicitou redefinição de senha')}
+            className={clsx('cursor-pointer text-2xl text-red-500 w-full', hoverClassName)}
+          />
+        ) : (
+          <div />
+        ),
     },
   ];
 

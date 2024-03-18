@@ -6,4 +6,5 @@ export interface Users {
   phone: string;
   password: string;
   salt: string;
+  forgotPassword?: boolean;
 }
