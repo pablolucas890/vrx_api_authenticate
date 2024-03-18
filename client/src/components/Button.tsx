@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import React from 'react';
 
 import { MdNavigateNext } from 'react-icons/md';
+import { hoverClassName } from '../global/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   title: string;
@@ -17,9 +18,10 @@ export default function Button({ title, hasIcon, active, ...rest }: ButtonProps)
       <button
         {...props}
         className={clsx(
-          'text-white font-poopins p-3 rounded-md border-0 w-200 flex justify-center items-center hover:scale-110 hover:shadow-xl duration-300',
+          'text-white font-poopins p-3 rounded-md border-0 w-200 flex justify-center items-center',
           active ? 'bg-primary-500' : 'bg-primary-300',
           className,
+          hoverClassName,
         )}
       >
         <p className='font-bold'>{title}</p>

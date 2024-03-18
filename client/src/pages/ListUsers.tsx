@@ -1,11 +1,76 @@
+import clsx from 'clsx';
 import React from 'react';
+import DataTable from 'react-data-table-component';
+import { MdDelete, MdEdit, MdOutlineArrowDropDown } from 'react-icons/md';
+import Content from '../components/Content';
+import Input from '../components/Input';
+import SideBar from '../components/SideBar';
+import SubTitle from '../components/SubTitle';
+import Title from '../components/Title';
 import { Users } from '../global/props';
-import { SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from '../global/utils';
+import { SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL, hoverClassName } from '../global/utils';
 
 function ListUsers() {
   const [users, setUsers] = React.useState<Users[]>([]);
+  const [filteredUsers, setFilteredUsers] = React.useState<Users[]>([]);
+
   const USERNAME = localStorage.getItem('username');
   const PASSWORD = localStorage.getItem('password');
+
+  const cellStyle = { fontFamily: 'poppins', fontSize: '12px' };
+  const columns = [
+    {
+      name: <SubTitle title='Nome' />,
+      selector: (r: Users) => r.name,
+      sortable: true,
+      grow: 4,
+      reorder: true,
+      style: cellStyle,
+    },
+    {
+      name: <SubTitle title='E-mail' />,
+      selector: (r: Users) => r.email,
+      sortable: true,
+      grow: 4,
+      reorder: true,
+      style: cellStyle,
+    },
+    {
+      name: <SubTitle title='Telefone' />,
+      selector: (r: Users) => r.phone,
+      sortable: true,
+      grow: 4,
+      reorder: true,
+      style: cellStyle,
+    },
+    {
+      name: <SubTitle title='Deletar' />,
+      selector: (r: Users) => r.id!,
+      sortable: false,
+      grow: 1,
+      reorder: false,
+      cell: (row: Users) => (
+        <MdDelete
+          onClick={() => handleDelete(row.id)}
+          className={clsx('cursor-pointer text-2xl text-primary-450', hoverClassName)}
+        />
+      ),
+    },
+    {
+      name: <SubTitle title='Editar' />,
+      selector: (r: Users) => r.id!,
+      sortable: false,
+      grow: 1,
+      reorder: false,
+      style: cellStyle,
+      cell: (row: Users) => (
+        <MdEdit
+          onClick={() => handleEdit(row.id)}
+          className={clsx('cursor-pointer text-2xl text-primary-450', hoverClassName)}
+        />
+      ),
+    },
+  ];
 
   React.useEffect(() => {
     fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/users`, {
@@ -17,6 +82,7 @@ function ListUsers() {
       .then(response => response.json())
       .then(data => {
         setUsers(data);
+        setFilteredUsers(data);
       })
       .catch(() => {
         alert('Erro ao conectar com o servidor');
@@ -27,6 +93,8 @@ function ListUsers() {
   }, []);
 
   function handleDelete(id?: number) {
+    const response = confirm('Deseja realmente deletar este usuário?');
+    if (!response) return;
     fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/user/${id}`, {
       method: 'DELETE',
       headers: {
@@ -34,8 +102,10 @@ function ListUsers() {
       },
     })
       .then(response => response.json())
-      .then(data => {
+      .then((data: Users[]) => {
+        alert('Usuário deletado com sucesso');
         setUsers(data);
+        setFilteredUsers(data);
       })
       .catch(() => {
         alert('Erro ao conectar com o servidor');
@@ -45,20 +115,39 @@ function ListUsers() {
       });
   }
 
+  function handleEdit(id?: number) {
+    window.location.href = `/edit/${id}`;
+  }
+
+  function handleFilter(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value.toLowerCase();
+    if (!value) return setFilteredUsers(users);
+    const filtered = users.filter(
+      user =>
+        user.name.toLowerCase().includes(value) ||
+        user.email.toLowerCase().includes(value) ||
+        user.phone.toLowerCase().includes(value),
+    );
+    setFilteredUsers(filtered);
+  }
+
   return (
-    <div className='users'>
-      <h1>Usuários</h1>
-      <ul id='users-list'>
-        {users.map(user => {
-          return (
-            <li key={user.id}>
-              {user.email}
-              <button onClick={() => handleDelete(user.id)}>Deletar</button>
-            </li>
-          );
-        })}
-      </ul>
-      <a href='/'>Voltar</a>
+    <div className='flex'>
+      <SideBar />
+      <Content>
+        <div className='w-full h-screen'>
+          <Title title='Usuários cadastrados' className='mb-4' />
+          <SubTitle title='Veja abaixo a lista de usuários cadastrados' className='mb-4' />
+          <Input placeholder='Buscar' className='bg-white mb-4 float-end rounded-3xl' onChange={e => handleFilter(e)} />
+          <DataTable
+            pagination
+            columns={columns}
+            data={filteredUsers}
+            selectableRowsComponentProps={{ indeterminate: (isIndeterminate: boolean) => isIndeterminate }}
+            sortIcon={<MdOutlineArrowDropDown />}
+          />
+        </div>
+      </Content>
     </div>
   );
 }

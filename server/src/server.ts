@@ -33,6 +33,7 @@ async function getUsers(db: sqlite3.Database): Promise<[Users]> {
 
 async function insertUser(
   db: sqlite3.Database,
+  id: number | undefined,
   name: string,
   email: string,
   phone: string,
@@ -40,16 +41,24 @@ async function insertUser(
   salt: string,
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    db.run(
-      'INSERT INTO users (name, email, phone, password, salt) VALUES (?, ?, ?, ?, ?)',
-      [name, email, phone, password, salt],
-      err => {
-        if (err) reject(err);
-        else {
-          resolve();
-        }
-      },
-    );
+    if (id)
+      db.run(
+        'UPDATE users SET name = ?, email = ?, phone = ?, password = ?, salt = ? WHERE id = ?',
+        [name, email, phone, password, salt, id],
+        err => {
+          if (err) reject(err);
+          else resolve();
+        },
+      );
+    else
+      db.run(
+        'INSERT INTO users (name, email, phone, password, salt) VALUES (?, ?, ?, ?, ?)',
+        [name, email, phone, password, salt],
+        err => {
+          if (err) reject(err);
+          else resolve();
+        },
+      );
   });
 }
 
@@ -101,14 +110,14 @@ async function bootstrap() {
 
   // API routes
   app.post('/register', async (request, reply) => {
-    const { email, password, name, phone } = request.body as Users;
+    const { id, email, password, name, phone } = request.body as Users;
     if (!email || !password) {
       return reply.status(400).send({ message: 'Email and password are required' });
     }
     try {
       const { salt, hash } = hashPassword(email, password);
       const db = new sqlite3.Database(DB3);
-      insertUser(db, name, email, phone, hash, salt);
+      insertUser(db, id, name, email, phone, hash, salt);
       db.close();
       return reply.status(201).send({ message: 'User created' });
     } catch (error) {
@@ -122,6 +131,22 @@ async function bootstrap() {
       const users = await getUsers(db);
       db.close();
       return reply.status(200).send(users);
+    } catch (error) {
+      return reply.status(500).send({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/users/:id', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const db = new sqlite3.Database(DB3);
+      const users = await getUsers(db);
+      const user = users.find((user: Users) => user.id === parseInt(id));
+      db.close();
+      if (!user) {
+        return reply.status(404).send({ message: 'User not found' });
+      }
+      return reply.status(200).send(user);
     } catch (error) {
       return reply.status(500).send({ message: 'Internal server error' });
     }

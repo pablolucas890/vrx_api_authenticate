@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import React from 'react';
+import { useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import Content from '../components/Content';
 import Input from '../components/Input';
@@ -18,6 +19,8 @@ import {
 } from '../global/utils';
 
 export function Register() {
+  const { id } = useParams();
+
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
@@ -27,6 +30,28 @@ export function Register() {
 
   const USERNAME = localStorage.getItem('username');
   const PASSWORD = localStorage.getItem('password');
+
+  React.useEffect(() => {
+    if (!id) return;
+    fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/users/${id}`, {
+      method: 'GET',
+      headers: {
+        Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD),
+      },
+    })
+      .then(async res => {
+        const json = await res.json();
+        setName(json.name);
+        setEmail(json.email);
+        setPhone(json.phone);
+      })
+      .catch(() => {
+        alert('Erro ao conectar com o servidor');
+        localStorage.removeItem('username');
+        localStorage.removeItem('password');
+        window.location.href = '/';
+      });
+  }, []);
 
   React.useEffect(() => {
     setSubmitEnabled(
@@ -47,7 +72,7 @@ export function Register() {
         'Content-Type': 'application/json',
         Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD),
       },
-      body: JSON.stringify({ name, email, phone, password }),
+      body: JSON.stringify({ id, name, email, phone, password }),
     })
       .then(async res => {
         const json = await res.json();

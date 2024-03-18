@@ -17,3 +17,5 @@ export function verifyEmail(email: string) {
 export function verifyConfirmPassword(password: string, confirmPassword: string) {
   return password.length >= 8 && confirmPassword.length >= 8 && password === confirmPassword;
 }
+
+export const hoverClassName = 'hover:scale-110 hover:shadow-xl duration-300';

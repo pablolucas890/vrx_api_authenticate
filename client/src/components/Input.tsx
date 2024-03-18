@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import React from 'react';
 import { FaLock, FaUnlock, FaUser } from 'react-icons/fa';
+import { hoverClassName } from '../global/utils';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: 'user' | 'lock';
@@ -26,10 +27,7 @@ export default function Input({ icon, active, ...rest }: InputProps) {
       {icon && (
         <Icon
           onClick={() => icon == 'lock' && setPasswordVisible(!passwordVisible)}
-          className={clsx(
-            'absolute top-4 left-4 hover:scale-110 hover:shadow-xl duration-300',
-            active ? 'text-primary-450' : 'text-secondary-600',
-          )}
+          className={clsx('absolute top-4 left-4', active ? 'text-primary-450' : 'text-secondary-600', hoverClassName)}
         />
       )}
     </div>

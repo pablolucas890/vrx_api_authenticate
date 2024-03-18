@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React from 'react';
 import DataTable from 'react-data-table-component';
 import { LuRefreshCw } from 'react-icons/lu';
@@ -8,7 +9,7 @@ import SideBar from '../components/SideBar';
 import SubTitle from '../components/SubTitle';
 import Title from '../components/Title';
 import { Users } from '../global/props';
-import { SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from '../global/utils';
+import { SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL, hoverClassName } from '../global/utils';
 
 const cellStyle = { fontFamily: 'poppins', fontSize: '12px' };
 const columns = [
@@ -62,7 +63,7 @@ export function Home() {
       headers: { Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD) },
     })
       .then(response => response.json())
-      .then(data => setUsers(data))
+      .then((data: Users[]) => setUsers(data))
       .catch(() => {
         localStorage.removeItem('username');
         localStorage.removeItem('password');
@@ -82,10 +83,7 @@ export function Home() {
             <div>
               <div className='flex justify-between items-center'>
                 <Title title='Usuários cadastrados' className='pt-6 pb-6' />
-                <LuRefreshCw
-                  onClick={listUsers}
-                  className='text-primary-450 text-2xl hover:scale-110 hover:shadow-xl duration-300'
-                />
+                <LuRefreshCw onClick={listUsers} className={clsx('text-primary-450 text-2xl', hoverClassName)} />
               </div>
               <DataTable
                 pagination
