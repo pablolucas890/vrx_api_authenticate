@@ -17,9 +17,10 @@ export default function Input({ icon, active, ...rest }: InputProps) {
     <div className='relative'>
       <input
         className={clsx(
-          'text-center bg-secondary-100 font-poopins p-3 border-secondary-300 rounded-md border-0 w-200 outline-primary-450',
+          'text-center bg-secondary-100 font-poopins p-3 border-secondary-300 rounded-md border-0 outline-primary-450',
           active ? 'text-primary-450' : 'text-secondary-300',
           className,
+          icon && 'px-10',
         )}
         type={icon === 'lock' ? (passwordVisible ? 'text' : 'password') : type}
         {...props}

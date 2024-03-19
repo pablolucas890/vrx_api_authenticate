@@ -67,6 +67,7 @@
     export const PASSWORD = 'admin';
     export const JWT_SECRET = 'secret';
     ```
+
 ## Production
 
 - Build docker
