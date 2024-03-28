@@ -1,13 +1,17 @@
 import cors from '@fastify/cors';
 import formbody from '@fastify/formbody';
+import fastifyStatic from '@fastify/static';
 import crypto from 'crypto';
 import Fastify from 'fastify';
 import * as fs from 'fs';
 import jwt from 'jsonwebtoken';
+import path from 'path';
 import sqlite3 from 'sqlite3';
 import { JWT_SECRET, PASSWORD, USERNAME } from './global/auth';
 import { Users } from './global/props';
 import { DAYS_TO_EXPIRE, DB3, SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from './global/utils';
+
+const __dirname = path.resolve();
 
 async function createDb3() {
   const db = new sqlite3.Database(DB3);
@@ -87,11 +91,16 @@ async function bootstrap() {
 
   await app.register(formbody);
 
+  await app.register(fastifyStatic, {
+    root: path.join(__dirname, 'public'),
+  });
+
   if (USERNAME && PASSWORD) {
     app.addHook('preHandler', async (request, reply) => {
       if (request.url === '/auth' && request.method === 'POST') return;
       else if (request.url === '/verify' && request.method === 'POST') return;
       else if (request.url.startsWith('/forgot') && request.method === 'GET') return;
+      else if (request.url.startsWith('/environments') && request.method === 'GET') return;
 
       const auth = request.headers.authorization || '';
       const [scheme, credentials] = auth.split(' ');
@@ -213,6 +222,16 @@ async function bootstrap() {
     } catch (error) {
       return reply.status(401).send({ message: 'Invalid token' });
     }
+  });
+
+  // Download environments
+  app.get('/environments/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const filePath = path.join(__dirname, 'public', `${id}`); // Caminho do arquivo para baixar
+    if (!fs.existsSync(filePath)) {
+      return reply.status(404).send({ message: 'File not found' });
+    }
+    return reply.sendFile(`${id}`); // Envie apenas o nome do arquivo
   });
 
   app.listen({ port: SERVER_PORT, host: SERVER_HOST }, err => {
