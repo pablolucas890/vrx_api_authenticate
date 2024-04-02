@@ -176,7 +176,6 @@ async function bootstrap() {
 
   app.get('/forgot/:email', async (request, reply) => {
     try {
-      // TODO: Implementar envio de email
       const { email } = request.params as { email: string };
       const db = new sqlite3.Database(DB3);
       const users = await getUsers(db);
