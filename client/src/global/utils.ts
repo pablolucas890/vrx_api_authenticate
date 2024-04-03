@@ -1,6 +1,6 @@
 export const SERVER_PROTOCOL = 'http';
 export const SERVER_PORT = 8080;
-export const SERVER_HOST = '0.0.0.0';
+export const SERVER_HOST = '15.229.252.34';
 
 export function verifyPassword(password: string) {
   return password.length >= 8;
