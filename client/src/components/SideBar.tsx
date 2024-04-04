@@ -3,11 +3,12 @@ import React from 'react';
 import { CgHome } from 'react-icons/cg';
 import { FiUserPlus } from 'react-icons/fi';
 import { GrGroup } from 'react-icons/gr';
+import { MdOutlineTexture } from 'react-icons/md';
 import { RiLogoutCircleLine } from 'react-icons/ri';
 import { hoverClassName } from '../global/utils';
 
 interface SideBarProps extends React.HTMLAttributes<HTMLDivElement> {
-  pageSelected: 'home' | 'register' | 'users';
+  pageSelected: 'home' | 'register' | 'users' | 'textures';
 }
 
 export default function SideBar({ pageSelected, ...rest }: SideBarProps) {
@@ -54,6 +55,16 @@ export default function SideBar({ pageSelected, ...rest }: SideBarProps) {
             pageSelected === 'users' ? 'text-primary-500' : 'text-secondary-600',
           )}
           onClick={() => (window.location.href = '/users')}
+        />
+      </div>
+      <div className='flex flex-col items-center h-20 justify-center'>
+        <MdOutlineTexture
+          className={clsx(
+            'text-2xl duration-300 cursor-pointer',
+            hoverClassName,
+            pageSelected === 'textures' ? 'text-primary-500' : 'text-secondary-600',
+          )}
+          onClick={() => (window.location.href = '/textures')}
         />
       </div>
     </div>

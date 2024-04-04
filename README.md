@@ -88,9 +88,6 @@
 ### Server
 - Download repository and enter server with `cd server/`
 - Download `docker` and `docker-compose` packages with `apt install docker docker-compose`
-- Go to remote `git checkout origin/main`
-- Remove main branch `git branch -D main`
-- Config git folder with `git config --global --add safe.directory /home/ubuntu/vrx_api_authenticate`
 - Create `auth.ts` file at `src/global` with:
     ```js
     export const USERNAME = '';
@@ -118,4 +115,3 @@
     ```
 - Enable service with `systemctl enable vrx_api_authenticate-update`
 - Start service with `systemctl start vrx_api_authenticate-update`
-- Update privilegies from service `chown -R root:root /home/ubuntu/vrx_api_authenticate` with correct path

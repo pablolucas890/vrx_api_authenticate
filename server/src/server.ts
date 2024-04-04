@@ -1,5 +1,6 @@
 import cors from '@fastify/cors';
 import formbody from '@fastify/formbody';
+import fastifyMultipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import crypto from 'crypto';
 import Fastify from 'fastify';
@@ -28,7 +29,7 @@ async function createDb3() {
     'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT UNIQUE, phone TEXT, password TEXT, salt TEXT, forgotPassword BOOLEAN DEFAULT 0)',
   );
   db.get(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name='users' AND sql LIKE '%active BOOLEAN%'",
+    'SELECT name FROM sqlite_master WHERE type=\'table\' AND name=\'users\' AND sql LIKE \'%active BOOLEAN%\'',
     (err, row) => {
       if (!row) db.run('ALTER TABLE users ADD COLUMN active BOOLEAN DEFAULT 1');
     },
@@ -117,6 +118,8 @@ async function bootstrap() {
   await app.register(fastifyStatic, {
     root: path.join(__dirname, 'public'),
   });
+
+  app.register(fastifyMultipart);
 
   if (USERNAME && PASSWORD) {
     app.addHook('preHandler', async (request, reply) => {
@@ -272,13 +275,52 @@ async function bootstrap() {
 
   app.post('/materials', async (request, reply) => {
     const { token } = request.body as { token: string };
-    try {
-      jwt.verify(token, JWT_SECRET);
+    if(token){
+      try {
+        jwt.verify(token, JWT_SECRET);;
+        const materials = fs.readdirSync(path.join(__dirname, 'public')).filter(file => file.endsWith('.png'));
+        return reply.status(200).send({ message: 'materials', materials });
+      } catch (error) {
+        return reply.status(401).send({ message: 'Invalid token' });
+      }
+    }else{
+      const { username, password } = request.body as { username: string; password: string };
+      if (username !== USERNAME || password !== PASSWORD)
+        return reply.status(401).send({ message: 'Invalid token' });
       const materials = fs.readdirSync(path.join(__dirname, 'public')).filter(file => file.endsWith('.png'));
       return reply.status(200).send({ message: 'materials', materials });
-    } catch (error) {
-      return reply.status(401).send({ message: 'Invalid token' });
     }
+  });
+
+  app.post('/upload_texture', async (request, reply) => {
+    try {
+      const data = await request.file();
+      if (!data || !data.file) return reply.status(400).send({ message: 'Invalid file' });
+      const { filename, file } = data;
+      const filePath = path.join(__dirname, 'public', filename.replace(/ /g, '_'));
+      console.log(filePath);
+      const writeStream = fs.createWriteStream(filePath);
+      await new Promise((resolve, reject) => {
+        file.pipe(writeStream);
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+      });
+      return reply.status(200).send({ message: 'File uploaded' });
+    } catch (error) {
+      console.error(error);
+      return reply.status(500).send({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/delete_texture', async (request, reply) => {
+    const data = JSON.parse(request.body as string);
+    const { material } = data as { material: string };
+    const filePath = path.join(__dirname, 'public', material);
+    if (!fs.existsSync(filePath)) {
+      return reply.status(404).send({ message: 'File not found' });
+    }
+    fs.unlinkSync(filePath);
+    return reply.status(200).send({ message: 'File deleted' });
   });
 
   // Download route
