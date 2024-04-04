@@ -99,9 +99,9 @@ async function bootstrap() {
     app.addHook('preHandler', async (request, reply) => {
       if (request.url === '/auth' && request.method === 'POST') return;
       else if (request.url === '/verify' && request.method === 'POST') return;
+      else if (request.url === '/materials' && request.method === 'POST') return;
       else if (request.url.startsWith('/forgot') && request.method === 'GET') return;
-      else if (request.url.startsWith('/environments') && request.method === 'GET') return;
-
+      else if (request.url.startsWith('/download') && request.method === 'GET') return;
       const auth = request.headers.authorization || '';
       const [scheme, credentials] = auth.split(' ');
       if (scheme && scheme.toLowerCase() === 'basic') {
@@ -224,15 +224,27 @@ async function bootstrap() {
     }
   });
 
-  // Download environments
-  app.get('/environments/:id', async (request, reply) => {
+  app.post('/materials', async (request, reply) => {
+    const { token } = request.body as { token: string };
+    try {
+      jwt.verify(token, JWT_SECRET);
+      const materials = fs.readdirSync(path.join(__dirname, 'public')).filter(file => file.endsWith('.png'));
+      return reply.status(200).send({ message: 'materials', materials });
+    } catch (error) {
+      return reply.status(401).send({ message: 'Invalid token' });
+    }
+  });
+
+  // Download route
+  app.get('/download/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
-    const filePath = path.join(__dirname, 'public', `${id}`); // Caminho do arquivo para baixar
+    const filePath = path.join(__dirname, 'public', `${id}`);
     if (!fs.existsSync(filePath)) {
       return reply.status(404).send({ message: 'File not found' });
     }
-    return reply.sendFile(`${id}`); // Envie apenas o nome do arquivo
+    return reply.sendFile(`${id}`);
   });
+
 
   app.listen({ port: SERVER_PORT, host: SERVER_HOST }, err => {
     if (err) throw err;
