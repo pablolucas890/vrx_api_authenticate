@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import Button from '../components/Button';
 import Content from '../components/Content';
 import Input from '../components/Input';
@@ -19,7 +19,10 @@ import {
 } from '../global/utils';
 
 export function Register() {
-  const { id } = useParams();
+  
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const id = searchParams.get('id');
 
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');

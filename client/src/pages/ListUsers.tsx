@@ -133,7 +133,7 @@ function ListUsers() {
   }
 
   function handleEdit(id?: number) {
-    window.location.href = `/edit/${id}`;
+    window.location.href = `/edit?id=${id}`;
   }
 
   function handleFilter(e: React.ChangeEvent<HTMLInputElement>) {

@@ -12,7 +12,7 @@ const Authenticated = () => {
       <Route path='/' element={<Home />} />
       <Route path='/register' element={<Register />} />
       <Route path='/users' element={<ListUsers />} />
-      <Route path='/edit/:id' element={<Register />} />
+      <Route path='/edit' element={<Register />} />
     </Routes>
   );
 };
