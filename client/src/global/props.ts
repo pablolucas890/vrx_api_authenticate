@@ -7,4 +7,5 @@ export interface Users {
   password: string;
   salt: string;
   forgotPassword?: boolean;
+  active?: boolean;
 }

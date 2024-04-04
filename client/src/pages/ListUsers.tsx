@@ -87,6 +87,22 @@ function ListUsers() {
           <div />
         ),
     },
+    {
+      name: <SubTitle title='Ativo' className='w-full text-center' />,
+      selector: (r: Users) => r.id!,
+      sortable: true,
+      grow: 2,
+      reorder: true,
+      style: cellStyle,
+      cell: (row: Users) => (
+        <>
+          <SubTitle
+            title={row.active ? 'Sim' : 'Não'}
+            className={clsx('ml-4 font-bold text-center', row.active ? 'text-green-800' : 'text-red-500')}
+          />
+        </>
+      ),
+    },
   ];
 
   React.useEffect(() => {

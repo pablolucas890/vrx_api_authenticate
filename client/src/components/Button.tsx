@@ -19,7 +19,7 @@ export default function Button({ title, hasIcon, active, ...rest }: ButtonProps)
         {...props}
         className={clsx(
           'text-white font-poopins p-3 rounded-md border-0 w-200 flex justify-center items-center',
-          active ? 'bg-primary-500' : 'bg-primary-300',
+          active ? 'bg-primary-900' : 'bg-primary-300',
           className,
           hoverClassName,
         )}

@@ -13,6 +13,12 @@ import { DAYS_TO_EXPIRE, DB3, SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from '
 
 const __dirname = path.resolve();
 
+interface IDecoded {
+  email: string;
+  iat: number;
+  exp: number;
+}
+
 async function createDb3() {
   const db = new sqlite3.Database(DB3);
   if (!fs.existsSync(DB3)) {
@@ -20,6 +26,12 @@ async function createDb3() {
   }
   db.run(
     'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT UNIQUE, phone TEXT, password TEXT, salt TEXT, forgotPassword BOOLEAN DEFAULT 0)',
+  );
+  db.get(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='users' AND sql LIKE '%active BOOLEAN%'",
+    (err, row) => {
+      if (!row) db.run('ALTER TABLE users ADD COLUMN active BOOLEAN DEFAULT 1');
+    },
   );
   db.close();
 }
@@ -42,18 +54,29 @@ async function insertUser(
   email: string,
   phone: string,
   password: string,
+  active: boolean | undefined,
   salt: string,
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (id)
-      db.run(
-        'UPDATE users SET name = ?, email = ?, phone = ?, password = ?, salt = ?, forgotPassword = 0 WHERE id = ?',
-        [name, email, phone, password, salt, id],
-        err => {
-          if (err) reject(err);
-          else resolve();
-        },
-      );
+      if (password && salt)
+        db.run(
+          'UPDATE users SET name = ?, email = ?, phone = ?, password = ?, salt = ?, forgotPassword = 0, active = ? WHERE id = ?',
+          [name, email, phone, password, salt, active, id],
+          err => {
+            if (err) reject(err);
+            else resolve();
+          },
+        );
+      else
+        db.run(
+          'UPDATE users SET name = ?, email = ?, phone = ?, forgotPassword = 0, active = ? WHERE id = ?',
+          [name, email, phone, active, id],
+          err => {
+            if (err) reject(err);
+            else resolve();
+          },
+        );
     else
       db.run(
         'INSERT INTO users (name, email, phone, password, salt) VALUES (?, ?, ?, ?, ?)',
@@ -119,14 +142,20 @@ async function bootstrap() {
 
   // API routes
   app.post('/register', async (request, reply) => {
-    const { id, email, password, name, phone } = request.body as Users;
-    if (!email || !password) {
+    const { id, email, password, name, phone, active } = request.body as Users;
+
+    if (!id && (!email || !password)) {
       return reply.status(400).send({ message: 'Email and password are required' });
     }
+
     try {
-      const { salt, hash } = hashPassword(email, password);
       const db = new sqlite3.Database(DB3);
-      insertUser(db, id, name, email, phone, hash, salt);
+      if (password) {
+        const { salt, hash } = hashPassword(email, password);
+        insertUser(db, id, name, email, phone, hash, active, salt);
+      } else {
+        insertUser(db, id, name, email, phone, '', active, '');
+      }
       db.close();
       return reply.status(201).send({ message: 'User created' });
     } catch (error) {
@@ -197,11 +226,15 @@ async function bootstrap() {
     const db = new sqlite3.Database(DB3);
     const users = await getUsers(db);
     const user = users.find((user: { email: string }) => user.email === email);
+    db.close();
 
     if (!user) {
       return reply.status(401).send({ message: 'User not found' });
     }
 
+    if (!user.active) {
+      return reply.status(401).send({ message: 'User not active' });
+    }
     const hash = crypto.pbkdf2Sync(password, user.salt, 1000, 64, 'sha512').toString('hex');
 
     if (hash !== user.password) {
@@ -217,6 +250,20 @@ async function bootstrap() {
     const { token } = request.body as { token: string };
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
+      const decodedData = decoded as IDecoded;
+      const db = new sqlite3.Database(DB3);
+      const users = await getUsers(db);
+      const user = users.find((user: { email: string }) => user.email === decodedData.email);
+      db.close();
+
+      if (!user) {
+        return reply.status(401).send({ message: 'User not found' });
+      }
+
+      if (!user.active) {
+        return reply.status(401).send({ message: 'User not active' });
+      }
+
       return reply.status(200).send({ message: 'Valid token', decoded });
     } catch (error) {
       return reply.status(401).send({ message: 'Invalid token' });
@@ -243,7 +290,6 @@ async function bootstrap() {
     }
     return reply.sendFile(`${id}`);
   });
-
 
   app.listen({ port: SERVER_PORT, host: SERVER_HOST }, err => {
     if (err) throw err;

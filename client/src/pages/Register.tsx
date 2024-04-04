@@ -19,7 +19,6 @@ import {
 } from '../global/utils';
 
 export function Register() {
-  
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const id = searchParams.get('id');
@@ -28,6 +27,7 @@ export function Register() {
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [active, setActive] = React.useState(true);
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [submitEnabled, setSubmitEnabled] = React.useState(false);
 
@@ -47,6 +47,7 @@ export function Register() {
         setName(json.name);
         setEmail(json.email);
         setPhone(json.phone);
+        setActive(json.active);
       })
       .catch(() => {
         alert('Erro ao conectar com o servidor');
@@ -61,8 +62,8 @@ export function Register() {
       verifyName(name) &&
         verifyEmail(email) &&
         verifyPhone(phone) &&
-        verifyPassword(password) &&
-        verifyConfirmPassword(password, confirmPassword),
+        ((id != undefined && !password && !confirmPassword) ||
+          (verifyPassword(password) && verifyConfirmPassword(password, confirmPassword))),
     );
   }, [name, email, phone, password, confirmPassword]);
 
@@ -75,11 +76,14 @@ export function Register() {
         'Content-Type': 'application/json',
         Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD),
       },
-      body: JSON.stringify({ id, name, email, phone, password }),
+      body: JSON.stringify({ id, name, email, phone, password, active }),
     })
       .then(async res => {
         const json = await res.json();
-        if (json.error) alert(json.error);
+        if (res.status === 400) {
+          alert(json.message);
+          return;
+        }
         alert('Usuário cadastrado com sucesso');
         window.location.href = '/';
       })
@@ -143,7 +147,17 @@ export function Register() {
             onChange={e => setConfirmPassword(e.target.value)}
             active={confirmPassword.length > 0}
           />
-          <Button title='Cadastrar' type='submit' active={submitEnabled} onClick={handleSubmit} className='float-end' />
+          <div className={clsx('flex items-center gap-4', !id && 'hidden')}>
+            <Input type='checkbox' checked={active} onChange={e => setActive(e.target.checked)} />
+            <span className='text-gray-400'>Usuário ativo?</span>
+          </div>
+          <Button
+            title={id ? 'Salvar' : 'Cadastrar'}
+            type='submit'
+            active={submitEnabled}
+            onClick={handleSubmit}
+            className='float-end'
+          />
         </div>
       </Content>
     </div>
