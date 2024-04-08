@@ -8,6 +8,9 @@ export function verifyPassword(password: string) {
 export function verifyPhone(phone: string) {
   return phone.length >= 8;
 }
+export function verifyCompany(phone: string) {
+  return phone.length >= 8;
+}
 export function verifyName(name: string) {
   return name.length >= 8;
 }

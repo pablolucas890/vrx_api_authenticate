@@ -45,6 +45,14 @@ const columns = [
     reorder: true,
     style: cellStyle,
   },
+  {
+    name: <SubTitle title='Empresa' />,
+    selector: (r: Users) => r.company,
+    sortable: true,
+    grow: 2,
+    reorder: true,
+    style: cellStyle,
+  },
 ];
 
 export function Home() {

@@ -11,6 +11,7 @@ import {
   SERVER_HOST,
   SERVER_PORT,
   SERVER_PROTOCOL,
+  verifyCompany,
   verifyConfirmPassword,
   verifyEmail,
   verifyName,
@@ -26,6 +27,7 @@ export function Register() {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
+  const [company, setCompany] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [active, setActive] = React.useState(true);
   const [confirmPassword, setConfirmPassword] = React.useState('');
@@ -44,10 +46,11 @@ export function Register() {
     })
       .then(async res => {
         const json = await res.json();
-        setName(json.name);
-        setEmail(json.email);
-        setPhone(json.phone);
+        setName(json.name || '');
+        setEmail(json.email || '');
+        setPhone(json.phone || '');
         setActive(json.active);
+        setCompany(json.company || '');
       })
       .catch(() => {
         alert('Erro ao conectar com o servidor');
@@ -62,10 +65,11 @@ export function Register() {
       verifyName(name) &&
         verifyEmail(email) &&
         verifyPhone(phone) &&
+        verifyCompany(company) &&
         ((id != undefined && !password && !confirmPassword) ||
           (verifyPassword(password) && verifyConfirmPassword(password, confirmPassword))),
     );
-  }, [name, email, phone, password, confirmPassword]);
+  }, [name, email, phone, password, confirmPassword, company]);
 
   async function handleSubmit() {
     if (!submitEnabled) return;
@@ -76,7 +80,7 @@ export function Register() {
         'Content-Type': 'application/json',
         Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD),
       },
-      body: JSON.stringify({ id, name, email, phone, password, active }),
+      body: JSON.stringify({ id, name, email, phone, password, active, company }),
     })
       .then(async res => {
         const json = await res.json();
@@ -85,13 +89,13 @@ export function Register() {
           return;
         }
         alert('Usuário cadastrado com sucesso');
-        window.location.href = '/';
+        window.location.href = '/users';
       })
       .catch(() => {
         alert('Erro ao conectar com o servidor');
         localStorage.removeItem('username');
         localStorage.removeItem('password');
-        window.location.href = '/';
+        window.location.href = '/users';
       });
   }
 
@@ -124,6 +128,14 @@ export function Register() {
             type='phone'
             value={phone}
             onChange={e => setPhone(e.target.value)}
+            active={phone.length > 0}
+          />
+          <Input
+            className={clsx('bg-white w-full', !verifyCompany(company) && 'text-red-600 outline-red-600')}
+            placeholder='Empresa'
+            type='text'
+            value={company}
+            onChange={e => setCompany(e.target.value)}
             active={phone.length > 0}
           />
           <Input

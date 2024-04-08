@@ -18,7 +18,7 @@ export default function Login() {
   return (
     <div className='flex'>
       <div className='md:w-2/4 h-screen bg-gradient-to-t from-primary-450 to-primary-500 flex items-center justify-center'>
-        <img src='logologin.png' alt='Login' className='w-2/4' />
+        <img src='logologin.png' alt='Login' className='w-2/5' />
       </div>
       <div className='md:w-2/4 sm:w-full h-screen items-center justify-center flex'>
         <div className='gap-4'>
@@ -31,6 +31,7 @@ export default function Login() {
             type='email'
             value={email}
             onChange={e => setEmail(e.target.value)}
+            onKeyUp={e => e.key === 'Enter' && handleLogin()}
             className='mb-4 w-[300px]'
           />
           <Input
@@ -40,6 +41,7 @@ export default function Login() {
             type='password'
             value={password}
             onChange={e => setPassword(e.target.value)}
+            onKeyUp={e => e.key === 'Enter' && handleLogin()}
             className='mb-6 w-[300px]'
           />
           <Button

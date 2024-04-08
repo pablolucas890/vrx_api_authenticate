@@ -34,6 +34,12 @@ async function createDb3() {
       if (!row) db.run('ALTER TABLE users ADD COLUMN active BOOLEAN DEFAULT 1');
     },
   );
+  db.get(
+    'SELECT name FROM sqlite_master WHERE type=\'table\' AND name=\'users\' AND sql LIKE \'%company TEXT%\'',
+    (err, row) => {
+      if (!row) db.run('ALTER TABLE users ADD COLUMN company TEXT');
+    },
+  );
   db.close();
 }
 
@@ -56,14 +62,15 @@ async function insertUser(
   phone: string,
   password: string,
   active: boolean | undefined,
+  company: string,
   salt: string,
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (id)
       if (password && salt)
         db.run(
-          'UPDATE users SET name = ?, email = ?, phone = ?, password = ?, salt = ?, forgotPassword = 0, active = ? WHERE id = ?',
-          [name, email, phone, password, salt, active, id],
+          'UPDATE users SET name = ?, email = ?, phone = ?, password = ?, salt = ?, forgotPassword = 0, active = ?, company = ? WHERE id = ?',
+          [name, email, phone, password, salt, active, company, id],
           err => {
             if (err) reject(err);
             else resolve();
@@ -71,8 +78,8 @@ async function insertUser(
         );
       else
         db.run(
-          'UPDATE users SET name = ?, email = ?, phone = ?, forgotPassword = 0, active = ? WHERE id = ?',
-          [name, email, phone, active, id],
+          'UPDATE users SET name = ?, email = ?, phone = ?, forgotPassword = 0, active = ?, company = ? WHERE id = ?',
+          [name, email, phone, active, company, id],
           err => {
             if (err) reject(err);
             else resolve();
@@ -80,8 +87,8 @@ async function insertUser(
         );
     else
       db.run(
-        'INSERT INTO users (name, email, phone, password, salt) VALUES (?, ?, ?, ?, ?)',
-        [name, email, phone, password, salt],
+        'INSERT INTO users (name, email, phone, password, salt, company) VALUES (?, ?, ?, ?, ?, ?)',
+        [name, email, phone, password, salt, company],
         err => {
           if (err) reject(err);
           else resolve();
@@ -145,7 +152,7 @@ async function bootstrap() {
 
   // API routes
   app.post('/register', async (request, reply) => {
-    const { id, email, password, name, phone, active } = request.body as Users;
+    const { id, email, password, name, phone, active, company } = request.body as Users;
 
     if (!id && (!email || !password)) {
       return reply.status(400).send({ message: 'Email and password are required' });
@@ -155,9 +162,9 @@ async function bootstrap() {
       const db = new sqlite3.Database(DB3);
       if (password) {
         const { salt, hash } = hashPassword(email, password);
-        insertUser(db, id, name, email, phone, hash, active, salt);
+        insertUser(db, id, name, email, phone, hash, active, company, salt);
       } else {
-        insertUser(db, id, name, email, phone, '', active, '');
+        insertUser(db, id, name, email, phone, '', active, company, '');
       }
       db.close();
       return reply.status(201).send({ message: 'User created' });
@@ -275,18 +282,17 @@ async function bootstrap() {
 
   app.post('/materials', async (request, reply) => {
     const { token } = request.body as { token: string };
-    if(token){
+    if (token) {
       try {
-        jwt.verify(token, JWT_SECRET);;
+        jwt.verify(token, JWT_SECRET);
         const materials = fs.readdirSync(path.join(__dirname, 'public')).filter(file => file.endsWith('.png'));
         return reply.status(200).send({ message: 'materials', materials });
       } catch (error) {
         return reply.status(401).send({ message: 'Invalid token' });
       }
-    }else{
+    } else {
       const { username, password } = request.body as { username: string; password: string };
-      if (username !== USERNAME || password !== PASSWORD)
-        return reply.status(401).send({ message: 'Invalid token' });
+      if (username !== USERNAME || password !== PASSWORD) return reply.status(401).send({ message: 'Invalid token' });
       const materials = fs.readdirSync(path.join(__dirname, 'public')).filter(file => file.endsWith('.png'));
       return reply.status(200).send({ message: 'materials', materials });
     }

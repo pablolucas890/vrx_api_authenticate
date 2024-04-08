@@ -19,7 +19,6 @@ function Textures() {
   }, []);
 
   function fetchTextures() {
-
     fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/materials`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -27,11 +26,10 @@ function Textures() {
     })
       .then(response => response.json())
       .then(data => {
-        if(data.materials){
+        if (data.materials) {
           setMaterials(data.materials);
           setFilteredMaterials(data.materials);
-        }
-        else alert('Erro ao conectar com o servidor');
+        } else alert('Erro ao conectar com o servidor');
       })
       .catch(() => {
         alert('Erro ao conectar com o servidor');
@@ -48,21 +46,27 @@ function Textures() {
   async function handleSaveTexture(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) return console.error('Arquivo não encontrado');
 
-    const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append('file', file);
-    fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/upload_texture`, {
-      method: 'POST',
-      headers: { Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD) },
-      body: formData,
-    })
-      .then(async res => {
-        if (res.status === 200) return await res.json();
-        else return false;
-      })
-      .then(res => (res ? alert('Textura adicionada com sucesso') : alert('Erro ao adicionar textura')))
-      .then(() => fetchTextures())
-      .catch(err => console.error(err));
+    const files = e.target.files;
+    const result = await new Promise(resolve => {
+      Array.from(files).forEach(async file => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        await fetch(`${SERVER_PROTOCOL}://${SERVER_HOST}:${SERVER_PORT}/upload_texture`, {
+          method: 'POST',
+          headers: { Authorization: 'Basic ' + btoa(USERNAME + ':' + PASSWORD) },
+          body: formData,
+        })
+          .then(async res => {
+            if (res.status === 200) return await res.json();
+            else return false;
+          })
+          .catch(err => console.error(err));
+      });
+      resolve(true);
+    });
+    if (result) alert('Textura(s) salva(s) com sucesso');
+    else alert('Erro ao salvar textura(s)');
     fetchTextures();
   }
 
@@ -96,16 +100,28 @@ function Textures() {
       <Content className='flex flex-col items-center'>
         <div className='flex justify-center gap-4'>
           <Button title='Adicionar Textura' active onClick={handleUpload} className='mb-4' />
-          <Input type='text' placeholder='Pesquisar...' className='mb-4 border-primary-900 border-2' onChange={handleFilterMaterials} />
+          <Input
+            type='text'
+            placeholder='Pesquisar...'
+            className='mb-4 border-primary-900 border-2'
+            onChange={handleFilterMaterials}
+          />
         </div>
-        <input type='file' id='file' accept='.png' style={{ display: 'none' }} onChange={handleSaveTexture} />
+        <input type='file' id='file' accept='.png' style={{ display: 'none' }} onChange={handleSaveTexture} multiple />
         <div className='grid grid-cols-4 gap-4 h-screen overflow-y-auto border border-gray-300'>
           {filteredMaterials.map(material => (
             <div key={material}>
-              <img src={SERVER_PROTOCOL + '://' + SERVER_HOST + ':' + SERVER_PORT + '/download/' + material} alt={material} className='w-60 h-60 border border-gray-300' />
-              <div className='flex justify-center gap-4'>
+              <img
+                src={SERVER_PROTOCOL + '://' + SERVER_HOST + ':' + SERVER_PORT + '/download/' + material}
+                alt={material}
+                className='w-60 h-60 border border-gray-300'
+              />
+              <div className='flex justify-center gap-4 relative'>
                 <SubTitle title={material} className='text-center mt-2' />
-                <MdDelete className='text-red-500 text-3xl cursor-pointer' onClick={() => handleDeleteTexture(material)} />
+                <MdDelete
+                  className='text-red-500 text-3xl cursor-pointer absolute right-4 top-2'
+                  onClick={() => handleDeleteTexture(material)}
+                />
               </div>
             </div>
           ))}

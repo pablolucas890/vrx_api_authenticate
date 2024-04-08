@@ -8,4 +8,5 @@ export interface Users {
   salt: string;
   forgotPassword?: boolean;
   active?: boolean;
+  company: string;
 }
