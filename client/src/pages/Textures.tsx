@@ -47,6 +47,15 @@ function Textures() {
     if (!e.target.files) return console.error('Arquivo não encontrado');
 
     const files = e.target.files;
+    
+    let error = false;
+    Array.from(files).forEach(file => {
+      const size = file.size / 1024 / 1024;
+      if (size > 10) error = true;
+    });
+
+    if (error) return alert('Limite de 10MB por arquivo, por favor, selecione um arquivo menor');
+
     const result = await new Promise(resolve => {
       Array.from(files).forEach(async file => {
         const formData = new FormData();

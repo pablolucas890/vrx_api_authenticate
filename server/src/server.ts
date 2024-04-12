@@ -126,7 +126,16 @@ async function bootstrap() {
     root: path.join(__dirname, 'public'),
   });
 
-  app.register(fastifyMultipart);
+  app.register(fastifyMultipart, {
+    limits: {
+      fieldNameSize: 1000,
+      fieldSize: 10000000,
+      fields: 100,
+      fileSize: 10000000,
+      files: 10,
+      headerPairs: 20000,
+    },
+  });
 
   if (USERNAME && PASSWORD) {
     app.addHook('preHandler', async (request, reply) => {
