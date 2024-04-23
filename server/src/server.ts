@@ -7,10 +7,11 @@ import Fastify from 'fastify';
 import * as fs from 'fs';
 import jwt from 'jsonwebtoken';
 import path from 'path';
+import ShortUniqueId from "short-unique-id";
 import sqlite3 from 'sqlite3';
 import { JWT_SECRET, PASSWORD, USERNAME } from './global/auth';
-import { Users } from './global/props';
-import { DAYS_TO_EXPIRE, DB3, SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from './global/utils';
+import { Companies, Plantas, Projects, Users } from './global/props';
+import { DAYS_TO_EXPIRE, DB3, ROLE_USER, SERVER_HOST, SERVER_PORT, SERVER_PROTOCOL } from './global/utils';
 
 const __dirname = path.resolve();
 
@@ -26,7 +27,7 @@ async function createDb3() {
     fs.writeFileSync(DB3, '');
   }
   db.run(
-    'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT UNIQUE, phone TEXT, password TEXT, salt TEXT, forgotPassword BOOLEAN DEFAULT 0)',
+    `CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT UNIQUE, phone TEXT, password TEXT, salt TEXT, forgotPassword BOOLEAN DEFAULT 0, role TEXT DEFAULT '${ROLE_USER}' )`,
   );
   db.get(
     'SELECT name FROM sqlite_master WHERE type=\'table\' AND name=\'users\' AND sql LIKE \'%active BOOLEAN%\'',
@@ -40,9 +41,19 @@ async function createDb3() {
       if (!row) db.run('ALTER TABLE users ADD COLUMN company TEXT');
     },
   );
+  db.run(
+    'CREATE TABLE IF NOT EXISTS companies (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, cod VARCHAR(6) UNIQUE, cnpj TEXT, phone TEXT, email TEXT)',
+  );
+  db.run(
+    'CREATE TABLE IF NOT EXISTS projects (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, cod VARCHAR(8) UNIQUE, id_architect INTEGER, id_company INTEGER, FOREIGN KEY (id_architect) REFERENCES users(id), FOREIGN KEY (id_company) REFERENCES companies(id))',
+  );
+  db.run(
+    'CREATE TABLE IF NOT EXISTS plantas (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, config TEXT, cod_project VARCHAR(8), FOREIGN KEY (cod_project) REFERENCES projects(cod))',
+  );    
   db.close();
 }
 
+// Users
 async function getUsers(db: sqlite3.Database): Promise<[Users]> {
   return new Promise((resolve, reject) => {
     db.all('SELECT * FROM users', (err, users) => {
@@ -64,13 +75,14 @@ async function insertUser(
   active: boolean | undefined,
   company: string,
   salt: string,
+  role: string | undefined,
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (id)
       if (password && salt)
         db.run(
-          'UPDATE users SET name = ?, email = ?, phone = ?, password = ?, salt = ?, forgotPassword = 0, active = ?, company = ? WHERE id = ?',
-          [name, email, phone, password, salt, active, company, id],
+          'UPDATE users SET name = ?, email = ?, phone = ?, password = ?, salt = ?, forgotPassword = 0, active = ?, company = ?, role = ? WHERE id = ?',
+          [name, email, phone, password, salt, active, company, role, id],
           err => {
             if (err) reject(err);
             else resolve();
@@ -78,8 +90,8 @@ async function insertUser(
         );
       else
         db.run(
-          'UPDATE users SET name = ?, email = ?, phone = ?, forgotPassword = 0, active = ?, company = ? WHERE id = ?',
-          [name, email, phone, active, company, id],
+          'UPDATE users SET name = ?, email = ?, phone = ?, forgotPassword = 0, active = ?, company = ?, role = ? WHERE id = ?',
+          [name, email, phone, active, company, role, id],
           err => {
             if (err) reject(err);
             else resolve();
@@ -87,8 +99,8 @@ async function insertUser(
         );
     else
       db.run(
-        'INSERT INTO users (name, email, phone, password, salt, company) VALUES (?, ?, ?, ?, ?, ?)',
-        [name, email, phone, password, salt, company],
+        'INSERT INTO users (name, email, phone, password, salt, company, role) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [name, email, phone, password, salt, company, role],
         err => {
           if (err) reject(err);
           else resolve();
@@ -106,6 +118,173 @@ async function deleteUser(db: sqlite3.Database, id: number): Promise<void> {
       }
     });
   });
+}
+
+// Companies
+async function getCompanies(db: sqlite3.Database): Promise<[Companies]> {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT * FROM companies', (err, companies) => {
+      if (err) reject(err);
+      else {
+        resolve(companies as [Companies]);
+      }
+    });
+  });
+}
+
+async function insertCompany(
+  db: sqlite3.Database,
+  id: number | undefined,
+  name: string,
+  cod: string,
+  cnpj: string,
+  phone: string,
+  email: string,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (id)
+      db.run(
+        'UPDATE companies SET name = ?, cod = ?, cnpj = ?, phone = ?, email = ? WHERE id = ?',
+        [name, cod, cnpj, phone, email, id],
+        err => {
+          if (err) reject(err);
+          else resolve();
+        },
+      );
+    else
+      db.run(
+        'INSERT INTO companies (name, cod, cnpj, phone, email) VALUES (?, ?, ?, ?, ?)',
+        [name, generateCode(6), cnpj, phone, email],
+        err => {
+          if (err) reject(err);
+          else resolve();
+        },
+      );
+  });
+}
+
+async function deleteCompany(db: sqlite3.Database, id: number): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    db.run('DELETE FROM companies WHERE id = ?', [id], err => {
+      if (err) reject(err);
+      else {
+        resolve();
+      }
+    });
+  });
+}
+
+// Projects
+async function getProjects(db: sqlite3.Database): Promise<[Projects]> {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT * FROM projects', (err, projects) => {
+      if (err) reject(err);
+      else {
+        resolve(projects as [Projects]);
+      }
+    });
+  });
+}
+
+async function insertProject(
+  db: sqlite3.Database,
+  id: number | undefined,
+  name: string,
+  cod: string,
+  id_architect: string,
+  id_company: string,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (id)
+      db.run(
+        'UPDATE projects SET name = ?, cod = ?, id_architect = ?, id_company = ? WHERE id = ?',
+        [name, cod, id_architect, id_company, id],
+        err => {
+          if (err) reject(err);
+          else resolve();
+        },
+      );
+    else
+      db.run(
+        'INSERT INTO projects (name, cod, id_architect, id_company) VALUES (?, ?, ?, ?)',
+        [name, generateCode(8), id_architect, id_company],
+        err => {
+          if (err) reject(err);
+          else resolve();
+        },
+      );
+  });
+}
+
+async function deleteProject(db: sqlite3.Database, id: number): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    db.run('DELETE FROM projects WHERE id = ?', [id], err => {
+      if (err) reject(err);
+      else {
+        resolve();
+      }
+    });
+  });
+
+}
+
+// Plantas
+async function getPlantas(db: sqlite3.Database): Promise<[Plantas]> {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT * FROM plantas', (err, plantas) => {
+      if (err) reject(err);
+      else {
+        resolve(plantas as [Plantas]);
+      }
+    });
+  });
+}
+
+async function insertPlanta(
+  db: sqlite3.Database,
+  id: number | undefined,
+  name: string,
+  config: string,
+  cod_project: string,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (id)
+      db.run(
+        'UPDATE plantas SET name = ?, config = ?, cod_project = ? WHERE id = ?',
+        [name, config, cod_project, id],
+        err => {
+          if (err) reject(err);
+          else resolve();
+        },
+      );
+    else
+      db.run(
+        'INSERT INTO plantas (name, config, cod_project) VALUES (?, ?, ?)',
+        [name, config, cod_project],
+        err => {
+          if (err) reject(err);
+          else resolve();
+        },
+      );
+  });
+}
+
+async function deletePlanta(db: sqlite3.Database, id: number): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    db.run('DELETE FROM plantas WHERE id = ?', [id], err => {
+      if (err) reject(err);
+      else {
+        resolve();
+      }
+    });
+  });
+}
+
+
+// functions
+function generateCode(length_char: number) {
+  const cod = String(new ShortUniqueId({ length: length_char })).toUpperCase()
+  return cod;
 }
 
 function hashPassword(email: string, password: string) {
@@ -161,7 +340,7 @@ async function bootstrap() {
 
   // API routes
   app.post('/register', async (request, reply) => {
-    const { id, email, password, name, phone, active, company } = request.body as Users;
+    const { id, email, password, name, phone, active, company, role } = request.body as Users;
 
     if (!id && (!email || !password)) {
       return reply.status(400).send({ message: 'Email and password are required' });
@@ -171,9 +350,9 @@ async function bootstrap() {
       const db = new sqlite3.Database(DB3);
       if (password) {
         const { salt, hash } = hashPassword(email, password);
-        insertUser(db, id, name, email, phone, hash, active, company, salt);
+        insertUser(db, id, name, email, phone, hash, active, company, salt, role);
       } else {
-        insertUser(db, id, name, email, phone, '', active, company, '');
+        insertUser(db, id, name, email, phone, '', active, company, '', role);
       }
       db.close();
       return reply.status(201).send({ message: 'User created' });
